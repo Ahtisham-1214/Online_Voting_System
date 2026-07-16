@@ -1,5 +1,6 @@
 package voting.system.VotingManagementSystem.dto;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -11,6 +12,8 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 public class ElectionRequestDto {
+
+    @NotBlank(message = "Election Title cannot be empty")
     String title;
     ElectionStatus electionStatus;
     LocalDateTime startTime;
