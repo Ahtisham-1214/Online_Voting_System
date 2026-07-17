@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 public class ElectionResponseDto {
+   private Long id;
    private String title;
    private ElectionStatus electionStatus;
    private LocalDateTime startTime;
