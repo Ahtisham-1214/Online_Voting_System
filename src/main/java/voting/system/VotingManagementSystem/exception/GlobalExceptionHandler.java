@@ -6,6 +6,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -34,6 +35,28 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorPayload, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        String message = "Invalid request parameter.";
+
+        // Check if the mismatched parameter is an Enum
+        if (ex.getRequiredType() != null && ex.getRequiredType().isEnum()) {
+            String enumName = ex.getRequiredType().getSimpleName();
+            String allowedValues = java.util.Arrays.toString(ex.getRequiredType().getEnumConstants());
+
+            message = String.format("Invalid value '%s' for %s. Allowed values are: %s",
+                    ex.getValue(), enumName, allowedValues);
+        }
+
+        ErrorResponse errorPayload = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                "Bad Request",
+                message,
+                ex.getRequiredType().getSimpleName()
+        );
+
+        return new ResponseEntity<>(errorPayload, HttpStatus.BAD_REQUEST);
+    }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, String>> handleValidationExceptions(MethodArgumentNotValidException ex) {
@@ -48,5 +71,16 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException ex) {
+        ErrorResponse errorPayload = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                "Bad Argument",
+                ex.getMessage()
+
+        );
+
+        return new ResponseEntity<>(errorPayload, HttpStatus.BAD_REQUEST);
+    }
 
 }
