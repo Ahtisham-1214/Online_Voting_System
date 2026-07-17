@@ -8,7 +8,4 @@ import voting.system.VotingManagementSystem.entity.Election;
 
 @Repository
 public interface ElectionRepository extends JpaRepository<Election, Long> {
-    @Query("update Election e set  where e.id = :id")
-    @Modifying
-    Election updateStatusById(Long id);
 }
