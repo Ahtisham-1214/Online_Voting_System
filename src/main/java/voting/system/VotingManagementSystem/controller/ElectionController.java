@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import voting.system.VotingManagementSystem.dto.ElectionRequestDto;
 import voting.system.VotingManagementSystem.dto.ElectionResponseDto;
+import voting.system.VotingManagementSystem.dto.ElectionUpdateDto;
 import voting.system.VotingManagementSystem.entity.Election;
 import voting.system.VotingManagementSystem.mapper.MyMapper;
 import voting.system.VotingManagementSystem.service.ElectionService;
@@ -47,11 +48,14 @@ public class ElectionController {
 
     @GetMapping("/elections/{id}")
     public ResponseEntity<ElectionResponseDto> getElectionById(@PathVariable Long id){
+        Election election = electionService.getElectionById(id);
         return ResponseEntity.status(HttpStatus.OK).
-                body(myMapper.toElectionResponseDto(electionService.getElectionById(id)));
+                body(myMapper.toElectionResponseDto(election));
     }
-//    @PutMapping("/elections/{id}")
-//    public ResponseEntity<ElectionResponseDto> updateStatus(@PathVariable Long id){
-//
-//    }
+    @PatchMapping("/elections/{id}")
+    public ResponseEntity<ElectionResponseDto> updateElectionById(@PathVariable Long id, @Valid @RequestBody ElectionUpdateDto electionUpdateDto){
+        Election updated = electionService.updateElectionById(id, electionUpdateDto);
+        return ResponseEntity.ok(myMapper.toElectionResponseDto(updated));
+
+    }
 }
