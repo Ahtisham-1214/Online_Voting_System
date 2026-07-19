@@ -8,7 +8,7 @@ import voting.system.VotingManagementSystem.entity.StudentStatus;
 
 
 @Value
-public class StudentDto {
+public class StudentRequestDto {
 
     @NotBlank( message = "Student Name cannot be empty")
     String name;
