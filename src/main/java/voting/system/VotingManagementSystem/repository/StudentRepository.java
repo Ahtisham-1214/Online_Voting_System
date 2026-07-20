@@ -8,7 +8,7 @@ import voting.system.VotingManagementSystem.entity.Student;
 public interface StudentRepository extends JpaRepository<Student, Long> {
     Student findByEmail(String email);
 
-    Student findBySapId(String studentId);
+    Student findBySapId(String sapId);
 
 
 
