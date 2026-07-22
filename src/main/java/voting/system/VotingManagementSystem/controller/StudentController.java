@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import voting.system.VotingManagementSystem.dto.StudentRequestDto;
 import voting.system.VotingManagementSystem.dto.StudentResponseDto;
 import voting.system.VotingManagementSystem.entity.Program;
@@ -19,6 +20,7 @@ import voting.system.VotingManagementSystem.entity.Student;
 import voting.system.VotingManagementSystem.entity.StudentStatus;
 import voting.system.VotingManagementSystem.mapper.MyMapper;
 import voting.system.VotingManagementSystem.service.StudentService;
+import voting.system.VotingManagementSystem.util.CSVHelper;
 
 import java.util.List;
 
@@ -99,5 +101,22 @@ public class StudentController {
                 .toList();
 
         return ResponseEntity.ok(students);
+    }
+
+    @PostMapping("/students/upload")
+    public ResponseEntity<String> uploadCSVFile(@RequestParam("file") MultipartFile file) {
+
+        // 1. Validate if file is uploaded
+        if (file.isEmpty()) {
+            return ResponseEntity.badRequest().body("Please select a CSV file to upload.");
+        }
+
+        // 2. Validate file format
+        if (!CSVHelper.hasCSVFormat(file)) {
+            return ResponseEntity.badRequest().body("Invalid file type. Please upload a .csv file.");
+        }
+            studentService.saveStudentsFromCsv(file);
+            return ResponseEntity.ok("CSV file processed and students imported successfully!");
+
     }
 }
