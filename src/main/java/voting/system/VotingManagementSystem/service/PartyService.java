@@ -27,6 +27,14 @@ public class PartyService {
     }
 
     public Party addParty(Party party) {
+        party.setName(party.getName().trim());
+        party.setSlogan(party.getSlogan().trim());
+        if (partyRepository.existsByName(party.getName()))
+            throw new IllegalArgumentException("Party with name: " + party.getName() + " already exists");
+
+        if (partyRepository.existBySlogan(party.getSlogan()))
+            throw new IllegalArgumentException("Party with slogan: " + party.getSlogan() + " already exists");
+
         return partyRepository.save(party);
     }
 
