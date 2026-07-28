@@ -39,13 +39,26 @@ public class PartyService {
     }
 
     public Party updatePartyById(Long id, PartyUpdateDto partyUpdateDto) {
-        Party party = partyRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Party with id " + id + " not found", Party.class.getSimpleName()));
+        Party party = partyRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Party with id " + id + " not found", PartyService.class.getSimpleName()));
 
         if (partyUpdateDto.getName() != null) {
             if (partyUpdateDto.getName().isBlank()) throw new IllegalArgumentException("Party name cannot be empty");
+            partyUpdateDto.setName(partyUpdateDto.getName().trim());
+
+            if (partyRepository.existsByName(partyUpdateDto.getName()))
+                throw new IllegalArgumentException("Party with name: " + partyUpdateDto.getName() + " already exists");
+
             party.setName(partyUpdateDto.getName());
         }
-        party.setSlogan(partyUpdateDto.getSlogan());
+
+        if (partyUpdateDto.getSlogan() != null && !partyUpdateDto.getSlogan().isBlank()) {
+            partyUpdateDto.setSlogan(partyUpdateDto.getSlogan().trim());
+
+            if (partyRepository.existBySlogan(partyUpdateDto.getSlogan()))
+                throw new IllegalArgumentException("Party with slogan: " + partyUpdateDto.getSlogan() + " already exists");
+
+            party.setSlogan(partyUpdateDto.getSlogan());
+        }
         return partyRepository.save(party);
 
     }
