@@ -12,6 +12,8 @@ import voting.system.VotingManagementSystem.repository.PartyMemberRepository;
 import voting.system.VotingManagementSystem.repository.PartyRepository;
 import voting.system.VotingManagementSystem.repository.StudentRepository;
 
+import java.util.List;
+
 @Service
 public class PartyMemberService {
     private final StudentRepository studentRepository;
@@ -71,6 +73,17 @@ public class PartyMemberService {
 
 
         return partyMemberRepository.save(member);
+    }
+
+    public List<PartyMember> findPartyMembersById(Long partyId){
+        if (!partyRepository.existsById(partyId)) {
+            throw new ResourceNotFoundException(
+                    "Party not found with ID: " + partyId,
+                    PartyMemberService.class.getSimpleName()
+            );
+        }
+
+        return partyMemberRepository.findPartyMemberById(partyId);
     }
 
 }
