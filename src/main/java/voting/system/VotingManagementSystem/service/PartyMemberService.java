@@ -3,10 +3,7 @@ package voting.system.VotingManagementSystem.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import voting.system.VotingManagementSystem.dto.PartyMemberRequestDto;
-import voting.system.VotingManagementSystem.entity.Party;
-import voting.system.VotingManagementSystem.entity.PartyMember;
-import voting.system.VotingManagementSystem.entity.Student;
-import voting.system.VotingManagementSystem.entity.StudentStatus;
+import voting.system.VotingManagementSystem.entity.*;
 import voting.system.VotingManagementSystem.exception.ResourceNotFoundException;
 import voting.system.VotingManagementSystem.repository.PartyMemberRepository;
 import voting.system.VotingManagementSystem.repository.PartyRepository;
@@ -34,7 +31,7 @@ public class PartyMemberService {
      * 1) There must exist a Party with the given ID
      * 2) The student must exist and be enrolled
      * 3) The student must neither be already a member of a party nor a member of a different election meaning that it can only participate in one election
-     * 4) A party can't have more than one member of same designation like only 1 president, 1 GS, 1 VP
+     * 4) A party can't have more than one member of same designation like only 1 president, 1 GS, 1 VP, but they can have multiple EX positions
      */
     public PartyMember addPartyMember(PartyMemberRequestDto partyMemberRequestDto) {
 
@@ -58,11 +55,16 @@ public class PartyMemberService {
             throw new IllegalStateException("Student with Sap ID: "+ student.getSapId() +" is already a member of " + partyMemberRepository.findPartyByStudentId(student.getId())); // making sure one student can participate in an election only once
 
 
-        if (partyMemberRepository.existsByPartyIdAndPosition(party.getId(), partyMemberRequestDto.getPosition())) {
-            throw new IllegalArgumentException(party.getName() + " already has a " + partyMemberRequestDto.getPosition()
-            );
+        if (partyMemberRequestDto.getPosition() != Position.EX_PRESIDENT
+                && partyMemberRequestDto.getPosition() != Position.EX_VICE_PRESIDENT
+                && partyMemberRequestDto.getPosition() != Position.EX_GENERAL_SECRETARY
+                && partyMemberRequestDto.getPosition() != Position.EX_PUBLIC_RELATION_OFFICER
+                && partyMemberRequestDto.getPosition() != Position.EX_TREASURER) {
+            if (partyMemberRepository.existsByPartyIdAndPosition(party.getId(), partyMemberRequestDto.getPosition())) {
+                throw new IllegalArgumentException(party.getName() + " already has a " + partyMemberRequestDto.getPosition()
+                );
+            }
         }
-
 
 
         // Create and save the PartyMember
