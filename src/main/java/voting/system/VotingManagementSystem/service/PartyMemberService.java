@@ -1,6 +1,7 @@
 package voting.system.VotingManagementSystem.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import voting.system.VotingManagementSystem.dto.PartyMemberRequestDto;
 import voting.system.VotingManagementSystem.entity.*;
@@ -8,6 +9,7 @@ import voting.system.VotingManagementSystem.exception.ResourceNotFoundException;
 import voting.system.VotingManagementSystem.repository.PartyMemberRepository;
 import voting.system.VotingManagementSystem.repository.PartyRepository;
 import voting.system.VotingManagementSystem.repository.StudentRepository;
+
 
 import java.util.List;
 
@@ -77,7 +79,7 @@ public class PartyMemberService {
         return partyMemberRepository.save(member);
     }
 
-    public List<PartyMember> findPartyMembersById(Long partyId){
+    public List<PartyMember> findPartyMembersById(Long partyId, Position position, Pageable pageable){
         if (!partyRepository.existsById(partyId)) {
             throw new ResourceNotFoundException(
                     "Party not found with ID: " + partyId,
@@ -85,7 +87,8 @@ public class PartyMemberService {
             );
         }
 
-        return partyMemberRepository.findPartyMemberById(partyId);
+
+        return partyMemberRepository.findPartyMembersById(partyId, position, pageable);
     }
 
 }
