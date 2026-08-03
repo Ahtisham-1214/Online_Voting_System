@@ -12,4 +12,6 @@ public class PartyResponseDto {
     private Long id;
     private String name;
     private String slogan;
+    private Long electionId;
+
 }
