@@ -35,20 +35,21 @@ public class ElectionService {
     @Transactional
     public Election updateElectionById(Long id, ElectionUpdateDto dto) {
         Election election = electionRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Election not found", Election.class.getSimpleName()));
+                .orElseThrow(() -> new ResourceNotFoundException("Election not found with id: " + id, Election.class.getSimpleName()));
 
         if (dto.getTitle() != null) {
             if (dto.getTitle().isBlank()) throw new IllegalArgumentException("Election Title cannot be empty");
             election.setTitle(dto.getTitle());
         }
 
-        if (dto.getMaxPartyMembers() != 0 && dto.getMaxPartyMembers() < 0) {
-            throw new IllegalArgumentException("Max Party Members cannot be negative");
+        if (dto.getMaxPartyMembers() != null) {
+            if (dto.getMaxPartyMembers() != 0 && dto.getMaxPartyMembers() < 0) {
+                throw new IllegalArgumentException("Max Party Members cannot be negative");
+            }
+            election.setMaxPartyMembers(dto.getMaxPartyMembers());
         }
 
 
-
-        election.setMaxPartyMembers(dto.getMaxPartyMembers());
         if (dto.getElectionStatus() != null) election.setElectionStatus(dto.getElectionStatus());
         if (dto.getStartTime() != null) election.setStartTime(dto.getStartTime());
         if (dto.getEndTime() != null) election.setEndTime(dto.getEndTime());

@@ -2,6 +2,7 @@ package voting.system.VotingManagementSystem.dto;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -19,6 +20,6 @@ public class ElectionRequestDto {
     ElectionStatus electionStatus;
     LocalDateTime startTime;
     LocalDateTime endTime;
-    @Min(value = 0, message = "Max Party Members cannot be negative")
-    int maxPartyMembers;
+    @Min(value = 5, message = "At least Have 5 members in a party")
+    Integer maxPartyMembers = 5;
 }

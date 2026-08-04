@@ -23,5 +23,5 @@ public class Election {
     private LocalDateTime endTime;
 
     @Column(nullable = false)
-    private int maxPartyMembers;
+    private Integer maxPartyMembers;
 }
