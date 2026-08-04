@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Election Management</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+        }
+
+        form {
+            margin-bottom: 30px;
+        }
+
+        label {
+            display: inline-block;
+            width: 180px;
+            margin-bottom: 10px;
+        }
+
+        input, select {
+            padding: 6px;
+            width: 250px;
+        }
+
+        button {
+            margin-top: 15px;
+            padding: 8px 20px;
+            cursor: pointer;
+        }
+
+        /* Styling for the View button */
+        .view-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .view-btn:hover {
+            background-color: #0056b3;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        table, th, td {
+            border: 1px solid black;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+
+        thead {
+            background: #efefef;
+        }
+
+        /* Hover effect to show table rows are clickable */
+        tbody tr {
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        tbody tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        /* Stylized Cancel button when editing */
+        .cancel-btn {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Election Management</h1>
+
+<form id="electionForm">
+    <!-- Hidden input field to store the ID for updates -->
+    <input type="hidden" name="id" id="electionId">
+
+    <div>
+        <label>Title</label>
+        <input
+                type="text"
+                name="title"
+                placeholder="Aror Election 2026"
+                required>
+    </div>
+    <div>
+        <label>Max Party Member</label>
+        <input
+                type="number"
+                name="maxPartyMembers"
+                placeholder="e.g: 6"
+        >
+    </div>
+
+    <div>
+        <label>Status</label>
+
+        <select name="status">
+            <option value="DRAFT">Draft</option>
+            <option value="CLOSED">Closed</option>
+            <option value="RESULT_PUBLISHED">Result Published</option>
+        </select>
+    </div>
+
+    <div>
+        <label>Election Start Time</label>
+
+        <input
+                type="datetime-local"
+                name="startTime"
+        >
+    </div>
+
+    <div>
+        <label>Election End Time</label>
+
+        <input
+                type="datetime-local"
+                name="endTime"
+        >
+    </div>
+
+    <button type="submit" id="submitBtn">
+        Create Election
+    </button>
+    <button type="button" id="cancelBtn" class="cancel-btn" style="display: none;">
+        Cancel Edit
+    </button>
+
+</form>
+
+<hr>
+
+<h2>All Elections</h2>
+
+<button id="viewElectionsBtn" class="view-btn">View Elections</button>
+
+<table>
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Title</th>
+        <th>Max Party Member</th>
+        <th>Start Time</th>
+        <th>End Time</th>
+        <th>Status</th>
+    </tr>
+    </thead>
+
+    <tbody id="electionTableBody">
+    </tbody>
+</table>
+
+<script>
+    let hasLoadedOnce = false;
+
+    document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById("viewElectionsBtn").addEventListener("click", () => {
+            loadElections();
+        });
+
+        // Cancel button reverts the form back to 'Create' mode
+        document.getElementById("cancelBtn").addEventListener("click", () => {
+            resetForm();
+        });
+    });
+
+    const form = document.getElementById("electionForm");
+    const submitBtn = document.getElementById("submitBtn");
+    const cancelBtn = document.getElementById("cancelBtn");
+
+    form.addEventListener("submit", async function (event) {
+
+        event.preventDefault();
+
+        const nullIfEmpty = (val) => val === "" ? null : val;
+        const id = form.id.value;
+
+        const election = {
+            title: form.title.value,
+            maxPartyMembers: form.maxPartyMembers.value ? parseInt(form.maxPartyMembers.value) : null,
+            electionStatus: form.status.value,
+            startTime: nullIfEmpty(form.startTime.value),
+            endTime: nullIfEmpty(form.endTime.value)
+        };
+
+        // Decide whether to POST (create) or PUT (update)
+        const isUpdate = !!id;
+        const url = isUpdate ? `/admin/elections/${id}` : "/admin/elections";
+        const method = isUpdate ? "PUT" : "POST";
+
+        try {
+
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(election)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || "Failed to process request");
+            }
+
+            alert(isUpdate ? "Election updated successfully." : "Election created successfully.");
+
+            resetForm();
+
+            if (hasLoadedOnce) {
+                loadElections();
+            }
+
+        } catch (error) {
+            console.error(error);
+            alert(error.message);
+        }
+
+    });
+
+    async function loadElections() {
+
+        try {
+
+            const response = await fetch("/admin/elections");
+
+            if (!response.ok) {
+                throw new Error("Failed to fetch elections");
+            }
+
+            const elections = await response.json();
+
+            const tbody = document.getElementById("electionTableBody");
+
+            tbody.innerHTML = "";
+
+            elections.forEach(election => {
+
+                const row = document.createElement("tr");
+
+                row.innerHTML = `
+                    <td>${election.id}</td>
+                    <td>${election.title}</td>
+                    <td>${election.maxPartyMembers}</td>
+                    <td>${formatDate(election.startTime)}</td>
+                    <td>${formatDate(election.endTime)}</td>
+                    <td>${election.electionStatus}</td>
+                `;
+
+                // Add a click listener to the entire row!
+                row.addEventListener("click", () => {
+                    populateFormForEdit(election);
+                });
+
+                tbody.appendChild(row);
+
+            });
+
+            hasLoadedOnce = true;
+
+        } catch (error) {
+            console.error(error);
+            alert("Unable to load elections.");
+        }
+
+    }
+
+    // Populate fields when a row is clicked
+    function populateFormForEdit(election) {
+        form.id.value = election.id; // Store ID invisibly
+        form.title.value = election.title;
+        form.maxPartyMembers.value = election.maxPartyMembers || "";
+        form.status.value = election.electionStatus;
+
+        // Convert ISO times to datetime-local format
+        form.startTime.value = formatToDateTimeLocal(election.startTime);
+        form.endTime.value = formatToDateTimeLocal(election.endTime);
+
+        // Update Button text and show Cancel button
+        submitBtn.textContent = "Update Election";
+        cancelBtn.style.display = "inline-block";
+
+        // Smooth scroll back to form top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Fully reset form and button states
+    function resetForm() {
+        form.reset();
+        form.id.value = ""; // Clear the hidden ID
+        submitBtn.textContent = "Create Election";
+        cancelBtn.style.display = "none";
+    }
+
+    // Formats dates from backend into a format datetime-local inputs accept (YYYY-MM-DDTHH:MM)
+    function formatToDateTimeLocal(dateTimeString) {
+        if (!dateTimeString) return "";
+
+        const date = new Date(dateTimeString);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+
+        return `${year}-${month}-${day}T${hours}:${minutes}`;
+    }
+
+    function formatDate(dateTime) {
+        if (!dateTime) return "";
+        return new Date(dateTime).toLocaleString();
+    }
+
+</script>
+
+</body>
+</html>

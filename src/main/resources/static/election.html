@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Election Management</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+        }
+
+        form {
+            margin-bottom: 30px;
+        }
+
+        label {
+            display: inline-block;
+            width: 180px;
+            margin-bottom: 10px;
+        }
+
+        input, select {
+            padding: 6px;
+            width: 250px;
+        }
+
+        button {
+            margin-top: 15px;
+            padding: 8px 20px;
+            cursor: pointer;
+        }
+
+        /* Styling for the View button */
+        .view-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .view-btn:hover {
+            background-color: #0056b3;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        table, th, td {
+            border: 1px solid black;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+
+        thead {
+            background: #efefef;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Election Management</h1>
+
+<form id="electionForm">
+
+    <div>
+        <label>Title</label>
+        <input
+                type="text"
+                name="title"
+                placeholder="Aror Election 2026"
+                required>
+    </div>
+    <div>
+        <label>Max Party Member</label>
+        <input
+                type="number"
+                name="maxPartyMembers"
+                placeholder="e.g: 6",
+                min="0"
+        >
+    </div>
+
+    <div>
+        <label>Status</label>
+
+        <select name="status">
+            <option value="DRAFT">Draft</option>
+            <option value="CLOSED">Closed</option>
+            <option value="RESULT_PUBLISHED">Result Published</option>
+        </select>
+    </div>
+
+    <div>
+        <label>Election Start Time</label>
+
+        <input
+                type="datetime-local"
+                name="startTime"
+        >
+    </div>
+
+    <div>
+        <label>Election End Time</label>
+
+        <input
+                type="datetime-local"
+                name="endTime"
+        >
+    </div>
+
+    <button type="submit">
+        Create Election
+    </button>
+
+</form>
+
+<hr>
+
+<h2>All Elections</h2>
+
+<!-- 1. The View button is here -->
+<button id="viewElectionsBtn" class="view-btn">View Elections</button>
+
+<!-- 2. The table remains visible instantly, but begins with an empty tbody -->
+<table>
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Title</th>
+        <th>Max Party Member</th>
+        <th>Start Time</th>
+        <th>End Time</th>
+        <th>Status</th>
+    </tr>
+    </thead>
+
+    <tbody id="electionTableBody">
+    <!-- Data will load here only when 'View Elections' is clicked -->
+    </tbody>
+</table>
+
+<script>
+    // State to track if the user has clicked view at least once
+    let hasLoadedOnce = false;
+
+    // 3. Set up click listener on the View button (No auto-loading on page start)
+    document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById("viewElectionsBtn").addEventListener("click", () => {
+            loadElections();
+        });
+    });
+
+    const form = document.getElementById("electionForm");
+
+    form.addEventListener("submit", async function (event) {
+
+        event.preventDefault();
+
+        const nullIfEmpty = (val) => val === "" ? null : val;
+
+        const election = {
+            title: form.title.value,
+            maxPartyMembers: form.maxPartyMembers.value ? parseInt(form.maxPartyMembers.value) : null,
+            electionStatus: form.status.value,
+            startTime: nullIfEmpty(form.startTime.value),
+            endTime: nullIfEmpty(form.endTime.value)
+        };
+
+        try {
+
+            const response = await fetch("/admin/elections", {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify(election)
+
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || "Failed to create election");
+            }
+
+            alert("Election created successfully.");
+
+            form.reset();
+
+            // Only refresh the table if the user already clicked "View" once
+            if (hasLoadedOnce) {
+                loadElections();
+            }
+
+        } catch (error) {
+
+            console.error(error);
+
+            alert(error.message);
+
+        }
+
+    });
+
+    async function loadElections() {
+
+        try {
+
+            const response = await fetch("/admin/elections");
+
+            if (!response.ok) {
+                throw new Error("Failed to fetch elections");
+            }
+
+            const elections = await response.json();
+
+            const tbody = document.getElementById("electionTableBody");
+
+            tbody.innerHTML = "";
+
+            elections.forEach(election => {
+
+                const row = document.createElement("tr");
+
+                row.innerHTML = `
+                    <td>${election.id}</td>
+                    <td>${election.title}</td>
+                    <td>${election.maxPartyMembers}</td>
+                    <td>${formatDate(election.startTime)}</td>
+                    <td>${formatDate(election.endTime)}</td>
+                    <td>${election.electionStatus}</td>
+                `;
+
+                tbody.appendChild(row);
+
+            });
+
+            // Mark that the view action has been completed
+            hasLoadedOnce = true;
+
+        } catch (error) {
+
+            console.error(error);
+
+            alert("Unable to load elections.");
+
+        }
+
+    }
+
+    function formatDate(dateTime) {
+
+        if (!dateTime)
+            return "";
+
+        return new Date(dateTime).toLocaleString();
+
+    }
+
+</script>
+
+</body>
+</html>
