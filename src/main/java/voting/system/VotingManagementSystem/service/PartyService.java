@@ -12,10 +12,12 @@ import java.util.List;
 @Service
 public class PartyService {
     private final PartyRepository partyRepository;
+    private final ElectionService electionService;
 
     @Autowired
-    public PartyService(PartyRepository partyRepository) {
+    public PartyService(PartyRepository partyRepository, ElectionService electionService) {
         this.partyRepository = partyRepository;
+        this.electionService = electionService;
     }
 
     public List<Party> getAllParties() {
@@ -27,6 +29,9 @@ public class PartyService {
     }
 
     public Party addParty(Party party) {
+        if (electionService.getElectionById(party.getElection().getId()) == null) // avoiding parties to add in an election if election doesn't exist'
+            return null;
+
         party.setName(party.getName().trim());
         party.setSlogan(party.getSlogan().trim());
         if (partyRepository.existsByName(party.getName()))
