@@ -3,12 +3,15 @@ package voting.system.VotingManagementSystem.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import voting.system.VotingManagementSystem.dto.PartyMemberRequestDto;
 import voting.system.VotingManagementSystem.entity.*;
+import voting.system.VotingManagementSystem.exception.MaxPartyMemberException;
 import voting.system.VotingManagementSystem.exception.ResourceNotFoundException;
 import voting.system.VotingManagementSystem.repository.PartyMemberRepository;
 import voting.system.VotingManagementSystem.repository.PartyRepository;
 import voting.system.VotingManagementSystem.repository.StudentRepository;
+import voting.system.VotingManagementSystem.util.HelperClass;
 
 
 import java.util.List;
@@ -35,6 +38,7 @@ public class PartyMemberService {
      * 3) The student must neither be already a member of a party nor a member of a different election meaning that it can only participate in one election
      * 4) A party can't have more than one member of same designation like only 1 president, 1 GS, 1 VP, but they can have multiple EX positions
      */
+    @Transactional // using transactional to fetch maxPartyMember
     public PartyMember addPartyMember(PartyMemberRequestDto partyMemberRequestDto) {
 
 
@@ -57,11 +61,7 @@ public class PartyMemberService {
             throw new IllegalStateException("Student with Sap ID: "+ student.getSapId() +" is already a member of " + partyMemberRepository.findPartyByStudentId(student.getId())); // making sure one student can participate in an election only once
 
 
-        if (partyMemberRequestDto.getPosition() != Position.EX_PRESIDENT
-                && partyMemberRequestDto.getPosition() != Position.EX_VICE_PRESIDENT
-                && partyMemberRequestDto.getPosition() != Position.EX_GENERAL_SECRETARY
-                && partyMemberRequestDto.getPosition() != Position.EX_PUBLIC_RELATION_OFFICER
-                && partyMemberRequestDto.getPosition() != Position.EX_TREASURER) {
+        if (!HelperClass.isExPosition(partyMemberRequestDto.getPosition())) {
             if (partyMemberRepository.existsByPartyIdAndPosition(party.getId(), partyMemberRequestDto.getPosition())) {
                 throw new IllegalArgumentException(party.getName() + " already has a " + partyMemberRequestDto.getPosition()
                 );
