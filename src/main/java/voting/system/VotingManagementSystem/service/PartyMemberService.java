@@ -66,6 +66,11 @@ public class PartyMemberService {
                 throw new IllegalArgumentException(party.getName() + " already has a " + partyMemberRequestDto.getPosition()
                 );
             }
+
+
+            int maxPartyMembers = party.getElection().getMaxPartyMembers();
+            if (partyMemberRepository.countPartyMemberById(party.getId()) >= maxPartyMembers)
+                throw new MaxPartyMemberException("Max Party Members allowed: " + maxPartyMembers, PartyMemberService.class.getSimpleName());
         }
 
 
