@@ -31,4 +31,20 @@ public interface PartyMemberRepository extends JpaRepository<PartyMember, Long> 
             "JOIN FETCH pm.party " +
             "WHERE pm.party.id = :partyId AND (:position IS NULL OR pm.position = :position)")
     List<PartyMember> findPartyMembersById(@Param("partyId") Long partyId,@Param("position") Position position, Pageable pageable);
+
+
+
+    @Query("""
+    SELECT COUNT(pm)
+    FROM PartyMember pm
+    WHERE pm.party.id = :partyId
+      AND pm.position NOT IN (
+          voting.system.VotingManagementSystem.entity.Position.EX_GENERAL_SECRETARY,
+          voting.system.VotingManagementSystem.entity.Position.EX_PRESIDENT,
+          voting.system.VotingManagementSystem.entity.Position.EX_PUBLIC_RELATION_OFFICER,
+          voting.system.VotingManagementSystem.entity.Position.EX_TREASURER,
+          voting.system.VotingManagementSystem.entity.Position.EX_VICE_PRESIDENT
+      )
+    """)
+    int countPartyMemberById(@Param("partyId") Long partyId);
 }
