@@ -18,12 +18,12 @@ import java.util.List;
 @RequestMapping("/admin")
 public class ElectionController {
     private final ElectionService electionService;
+    private final MyMapper myMapper;
 
     @Autowired
-    private  MyMapper myMapper;
-    @Autowired
-    public ElectionController(ElectionService electionService) {
+    public ElectionController(ElectionService electionService, MyMapper myMapper) {
         this.electionService = electionService;
+        this.myMapper = myMapper;
     }
 
     @PostMapping("/elections")
