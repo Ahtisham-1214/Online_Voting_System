@@ -5,9 +5,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import voting.system.VotingManagementSystem.dto.ElectionUpdateDto;
 import voting.system.VotingManagementSystem.entity.Election;
+import voting.system.VotingManagementSystem.entity.ElectionStatus;
 import voting.system.VotingManagementSystem.exception.ResourceNotFoundException;
 import voting.system.VotingManagementSystem.repository.ElectionRepository;
+import voting.system.VotingManagementSystem.util.HelperClass;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -21,6 +24,25 @@ public class ElectionService {
     }
 
     public Election createElection(Election election) {
+        if (election.getStartTime() != null && election.getEndTime() != null) {
+            HelperClass.validateTimes(election.getStartTime(), election.getEndTime());
+        }
+
+        if (election.getElectionStatus() != null) {
+            // Explicit status change requested
+            ElectionStatus targetStatus = election.getElectionStatus();
+
+            if (targetStatus == ElectionStatus.VOTING) {
+                if (election.getStartTime() == null || election.getEndTime() == null) {
+                    throw new IllegalStateException("Cannot set status to VOTING without configuring start and end times.");
+                }
+                if (LocalDateTime.now().isAfter(election.getEndTime())) {
+                    throw new IllegalStateException("Cannot set status to VOTING because the scheduled end time has passed.");
+                }
+            }
+
+            election.setElectionStatus(targetStatus);
+        }
         return electionRepository.save(election);
     }
 
@@ -43,17 +65,39 @@ public class ElectionService {
         }
 
         if (dto.getMaxPartyMembers() != null) {
-            if (dto.getMaxPartyMembers() != 0 && dto.getMaxPartyMembers() < 0) {
+            if (dto.getMaxPartyMembers() < 1) {
                 throw new IllegalArgumentException("Max Party Members cannot be negative");
             }
             election.setMaxPartyMembers(dto.getMaxPartyMembers());
         }
 
 
-        if (dto.getElectionStatus() != null) election.setElectionStatus(dto.getElectionStatus());
         if (dto.getStartTime() != null) election.setStartTime(dto.getStartTime());
         if (dto.getEndTime() != null) election.setEndTime(dto.getEndTime());
-        return electionRepository.save(election);
+
+        if (election.getStartTime() != null && election.getEndTime() != null) {
+            HelperClass.validateTimes(election.getStartTime(), election.getEndTime());
+        }
+
+        if (dto.getElectionStatus() != null) {
+            // Explicit status change requested
+            ElectionStatus targetStatus = dto.getElectionStatus();
+
+            if (targetStatus == ElectionStatus.VOTING) {
+                if (election.getStartTime() == null || election.getEndTime() == null) {
+                    throw new IllegalStateException("Cannot set status to VOTING without configuring start and end times.");
+                }
+                if (LocalDateTime.now().isAfter(election.getEndTime())) {
+                    throw new IllegalStateException("Cannot set status to VOTING because the scheduled end time has passed.");
+                }
+            }
+
+            election.setElectionStatus(targetStatus);
+        }
+
+
+
+        return election;
     }
 
 
